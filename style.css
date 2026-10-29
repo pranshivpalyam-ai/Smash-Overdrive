@@ -1,0 +1,315 @@
+/* Smash Overdrive — shell and 2D pixel-art UI.
+   Colours are the same 32-entry palette as js/config.js.
+   All UI is laid out in a 480x854 design space (#ui) that main.js scales. */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a12;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── stage ─────────────────────────────────────────────────────────────── */
+#app {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #0a0a12;
+  overflow: hidden;
+}
+
+#gl {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#ui {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 854px;
+  transform-origin: 0 0;
+}
+
+[hidden] { display: none !important; }
+
+.px {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ── off-camera arrows ─────────────────────────────────────────────────── */
+#arrows .arrow {
+  position: absolute;
+  width: 14px;
+  height: 22px;
+  background: #f2f5a0;
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+  transform: translateY(-50%);
+  display: none;
+}
+#arrows .arrow.left  { left: 6px; }
+#arrows .arrow.right { right: 6px; clip-path: polygon(0 0, 0 100%, 100% 50%); }
+#arrows .arrow.on { display: block; }
+
+/* ── HUD (top 12% of the stage) ─────────────────────────────────────────── */
+.hud {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 102px;
+  pointer-events: none;
+}
+.hud-left { position: absolute; left: 12px; top: 10px; }
+.hud-bar {
+  width: 130px;
+  height: 10px;
+  margin-top: 6px;
+  border: 3px solid #0a0a12;
+  background: #26263a;
+  box-shadow: 3px 3px 0 #0a0a12;
+}
+.hud-bar-fill { height: 100%; width: 0; background: #78cc5a; transition: width 0.2s steps(4); }
+.hud-centre { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); }
+.hud-lives { display: flex; gap: 8px; justify-content: center; }
+.life { position: relative; width: 24px; height: 24px; }
+.life.lost canvas.icon { visibility: hidden; }
+.shard {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  background: #c8e648;
+  animation: shard 0.6s ease-out forwards;
+}
+@keyframes shard { to { transform: translate(var(--dx), var(--dy)) rotate(180deg); opacity: 0; } }
+.hud-over { display: flex; gap: 6px; justify-content: center; margin-top: 5px; }
+.over-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 3px;
+  background: #26263a;
+  border: 2px solid #0a0a12;
+}
+.hud-right { position: absolute; right: 12px; top: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.hud-right .hot { animation: hot 0.5s steps(2) infinite; }
+@keyframes hot { 50% { filter: brightness(1.6); } }
+.hud-grip { display: flex; align-items: center; gap: 4px; }
+.hud-flash { position: absolute; left: 50%; top: 250px; transform: translate(-50%, -50%); }
+.hud-flash.pop { animation: pop 0.7s ease-out forwards; }
+.hud-smash { top: 330px; }
+.smash-flash {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 854px;
+  background: #f4f4f8;
+  opacity: 0;
+}
+.smash-flash.on { animation: smashflash 0.18s steps(4) forwards; }
+@keyframes smashflash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+@keyframes pop {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  25%  { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  70%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.vignette {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 854px;
+  opacity: 0;
+  box-shadow: inset 0 0 90px 40px #d83a4a;
+}
+.vignette.on { animation: vig 0.35s ease-out 2; }
+@keyframes vig { 50% { opacity: 0.85; } }
+.hud-debug { position: absolute; left: 12px; top: 820px; }
+.touch-zones { display: none; }
+@media (pointer: coarse) {
+  .touch-zones { display: block; }
+  .touch-zone {
+    position: absolute;
+    top: 720px;
+    width: 34px;
+    height: 50px;
+    background: #f4f4f8;
+    opacity: 0.18;
+    clip-path: polygon(100% 0, 100% 100%, 0 50%);
+  }
+  .touch-zone.left { left: 30px; }
+  .touch-zone.right { right: 30px; clip-path: polygon(0 0, 0 100%, 100% 50%); }
+}
+
+/* ── screens ───────────────────────────────────────────────────────────── */
+#screens {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+.build-stamp {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+#screens.static {
+  background-size: cover;
+  background-position: center;
+  image-rendering: pixelated;
+}
+#screens.frozen {
+  background: rgba(10, 10, 18, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+#screens.live {
+  background: linear-gradient(rgba(10, 10, 18, 0.55), rgba(10, 10, 18, 0) 35%, rgba(10, 10, 18, 0) 60%, rgba(10, 10, 18, 0.7));
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 16px;
+  box-sizing: border-box;
+}
+.row { display: flex; align-items: center; gap: 10px; }
+.actions { margin-top: auto; flex-wrap: wrap; justify-content: center; }
+.grip-line { gap: 6px; }
+.divider { width: 100%; height: 4px; background: #0a0a12; margin: 4px 0; }
+
+.panel {
+  background: #26263a;
+  border: 4px solid #0a0a12;
+  box-shadow: 6px 6px 0 #0a0a12;
+  padding: 12px;
+  box-sizing: border-box;
+}
+.panel.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.panel.menu .actions { margin-top: 6px; }
+
+/* ── buttons ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #2a58c0;
+  border: 4px solid #0a0a12;
+  box-shadow: 4px 4px 0 #0a0a12;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0a0a12; }
+.btn.focus { background: #f7c245; outline: 4px solid #f4f4f8; }
+.btn.primary { background: #d83a4a; }
+.btn.primary.focus { background: #f7c245; }
+.btn.selected { background: #38d0c8; }
+.btn.active { background: #78cc5a; outline: 4px solid #f7c245; }
+.btn.danger { background: #7a3520; }
+.btn.wide { min-width: 240px; }
+.btn.disabled { opacity: 0.45; cursor: default; }
+.btn.dim { opacity: 0.6; }
+
+/* ── title ─────────────────────────────────────────────────────────────── */
+.title-big { margin-top: 70px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.title-actions { gap: 14px; }
+
+/* ── level select ──────────────────────────────────────────────────────── */
+.level-select .grid-panel { width: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
+.level-cell { flex-direction: column; gap: 4px; padding: 10px 0; }
+.level-cell.locked { background: #4e4e66; }
+.over-panel { width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.over-row { gap: 8px; flex-wrap: wrap; justify-content: center; }
+.over-card { flex-direction: column; gap: 4px; padding: 8px 10px; }
+
+/* ── shop ──────────────────────────────────────────────────────────────── */
+.shop .tabs { gap: 6px; }
+.tab { padding: 6px 8px; }
+.shop-body { width: 100%; flex: 1; min-height: 0; overflow-y: auto; }
+.over-list { display: flex; flex-direction: column; gap: 10px; }
+.over-item { display: flex; flex-direction: column; gap: 8px; }
+.over-text { display: flex; flex-direction: column; gap: 4px; }
+.blurb { display: flex; flex-direction: column; gap: 2px; }
+.over-foot { justify-content: space-between; }
+.buy { padding: 6px 10px; }
+.cosmetics { align-items: flex-start; gap: 12px; }
+.preview-box {
+  flex: none;
+  border: 4px solid #0a0a12;
+  box-shadow: 6px 6px 0 #0a0a12;
+  background: #4e4e66;
+  line-height: 0;
+}
+.preview-canvas { image-rendering: pixelated; display: block; }
+.cosmetic-groups { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+.cosmetic-group { display: flex; flex-direction: column; gap: 4px; }
+.cosmetic-row { flex-wrap: wrap; gap: 6px; }
+.swatch-btn { flex-direction: column; gap: 3px; padding: 3px; min-width: 40px; }
+
+/* ── complete / failed / settings ──────────────────────────────────────── */
+.stat { width: 280px; justify-content: space-between; }
+.tally { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 80px; }
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f7c245;
+  border: 4px solid #0a0a12;
+  transform: rotate(-4deg);
+}
+.confirm { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; border: 4px solid #d83a4a; }
+
+/* ── modal popups (controls, purchase confirmation) ────────────────────── */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 18, 0.6);
+}
+.panel.modal { max-width: 440px; }
+.controls, .confirm-buy { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.control-line { width: 380px; justify-content: space-between; }
+.btn.small { padding: 5px 8px; }
+.title-grip { margin-top: 6px; }
